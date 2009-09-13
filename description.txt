@@ -1,0 +1,1 @@
+A simple wine product catalogue that integrates with jojo_cart.
