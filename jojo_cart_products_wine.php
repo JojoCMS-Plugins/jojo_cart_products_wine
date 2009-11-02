@@ -29,11 +29,11 @@ class jojo_plugin_jojo_cart_products_wine extends JOJO_Plugin
         }
 
         /* attempt to match by product code */
-        $product = Jojo::selectRow("SELECT * FROM {product} WHERE pr_code = ?", $pcode);
+        $product = Jojo::selectRow("SELECT * FROM {product} WHERE pr_code = ? and status = 'active'", $pcode);
 
         /* attempt to match by id if code didn't work */
         if(empty($product)){
-            $product = Jojo::selectRow("SELECT * FROM {product} WHERE productid = ?", $code);
+            $product = Jojo::selectRow("SELECT * FROM {product} WHERE productid = ? and status = 'active'", $code);
          }
 
         /* decide on an appropriate product image */
