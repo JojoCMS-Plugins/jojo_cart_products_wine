@@ -29,32 +29,9 @@ $_provides['fieldTypes'] = array(
         );
 
 
-/* Register URI patterns */
+/* Register URI handlers */
+Jojo::registerURI(null, 'jojo_plugin_jojo_cart_products_wine', 'isUrl');
 
-$languages = Jojo::selectQuery("SELECT languageid FROM {language} WHERE active = 'yes'");
-if (Jojo::getOption('product_enable_categories', 'no') == 'yes') $categories = Jojo::selectQuery("SELECT productcategoryid FROM {productcategory}");
-
-foreach ($languages as $k => $v){
-    $language = !empty($languages[$k]['languageid']) ? $languages[$k]['languageid'] : Jojo::getOption('multilanguage-default', 'en');
-    $prefix = jojo_plugin_jojo_cart_products_wine::_getPrefix('product', $language );
-    if (empty($prefix)) continue;
-    Jojo::registerURI("$prefix/[id:integer]/[string]", 'jojo_plugin_jojo_cart_products_wine'); // "products/123/name-of-product/"
-    Jojo::registerURI("$prefix/[id:integer]",          'jojo_plugin_jojo_cart_products_wine'); // "products/123/"
-    Jojo::registerURI("$prefix/p[pagenum:([0-9]+)]",   'jojo_plugin_jojo_cart_products_wine'); // "products/p2/" for pagination of products
-    Jojo::registerURI("$prefix/[url:string]",          'jojo_plugin_jojo_cart_products_wine'); // "products/url/" for pagination of products
-    if ((Jojo::getOption('product_enable_categories', 'no') == 'yes') && count($categories)) {
-        foreach ($categories as $k => $v){
-            $categoryid = $categories[$k]['productcategoryid'];
-            $prefix = jojo_plugin_Jojo_cart_products_wine::_getPrefix('product', $language, $categoryid );
-            if (empty($prefix)) continue;
-            Jojo::registerURI("$prefix/[id:integer]/[string]", 'jojo_plugin_jojo_cart_products_wine'); // "category/123/name-of-product/"
-            Jojo::registerURI("$prefix/[id:integer]",          'jojo_plugin_jojo_cart_products_wine'); // "category/123/"
-            Jojo::registerURI("$prefix/p[pagenum:([0-9]+)]",   'jojo_plugin_jojo_cart_products_wine'); // "category/p2/" for pagination of products
-            Jojo::registerURI("$prefix/[url:string]",          'jojo_plugin_jojo_cart_products_wine'); // "products/url/" for pagination of products
-        }
-    }
-
-}
 
 if (class_exists(Jojo_Cart_Class)) {
     call_user_func(array(Jojo_Cart_Class, 'setProductHandler'), 'jojo_plugin_jojo_cart_products_wine');
@@ -102,13 +79,15 @@ Jojo::addFilter('jojo_search', 'search', 'jojo_cart_products_wine');
 /* Content Filter */
 Jojo::addFilter('content', 'removesnip', 'jojo_cart_products_wine');
 
-/* Autotag Filter */
-Jojo::addFilter('jojo_autotag', 'autotag', 'jojo_cart_products_wine');
-
-
 /* capture the button press in the admin section */
-Jojo::addHook('admin_action_after_save', 'admin_action_after_save', 'jojo_cart_products_wine');
+Jojo::addHook('admin_action_after_save_product', 'admin_action_after_save_product', 'jojo_cart_products_wine');
+Jojo::addHook('admin_action_after_save_page', 'admin_action_after_save_page', 'jojo_cart_products_wine');
+Jojo::addHook('admin_action_after_save_productcategory', 'admin_action_after_save_productcategory', 'jojo_cart_products_wine');
 
+/* Newsletter content Filter */
+if (class_exists('Jojo_Plugin_Jojo_Newsletter') && Jojo::tableExists('newsletter_product')) {
+    Jojo::addFilter('jojo_newslettercontent', 'newslettercontent', 'jojo_cart_products_wine');
+}
 
 $_options[] = array(
     'id'          => 'cart_product_image_size',
@@ -166,27 +145,48 @@ $_options[] = array(
 );
 
 $_options[] = array(
-    'id'          => 'product_forwardtofriend',
-    'category'    => 'Products',
-    'label'       => 'Show "Send to a Friend"',
-    'description' => 'Shows the send to friend button at the bottom of each product page',
-    'type'        => 'radio',
-    'default'     => 'no',
-    'options'     => 'yes,no',
-    'plugin'      => 'jojo_cart_products_wine'
-);
-
-$_options[] = array(
-    'id'          => 'product_num_sidebar_products',
-    'category'    => 'Products',
-    'label'       => 'Number of product teasers to show in the sidebar',
-    'description' => 'The number of products to be displayed as snippets in a teaser box on other pages)',
+    'id'          => 'article_num_sidebar_articles',
+    'category'    => 'Articles',
+    'label'       => 'Number of article teasers to show in the sidebar',
+    'description' => 'The number of articles to be displayed as snippets in a teaser box on other pages - set to 0 to disable',
     'type'        => 'integer',
     'default'     => '3',
     'options'     => '',
-    'plugin'      => 'jojo_cart_products_wine'
+    'plugin'      => 'jojo_article'
 );
 
+$_options[] = array(
+    'id'          => 'article_sidebar_randomise',
+    'category'    => 'Articles',
+    'label'       => 'Randmomise selection of teasers out of',
+    'description' => 'Pick the sidebar articles from a larger group, shuffle them, and then slice them back to the original number so that sidebar content is more dynamic  - set to 0 to disable',
+    'type'        => 'integer',
+    'default'     => '0',
+    'options'     => '',
+    'plugin'      => 'jojo_article'
+);
+
+$_options[] = array(
+    'id'          => 'article_sidebar_categories',
+    'category'    => 'Articles',
+    'label'       => 'Article teasers by category',
+    'description' => 'Generate sidebar list from all articles and also create a list from each category',
+    'type'        => 'radio',
+    'default'     => 'no',
+    'options'     => 'yes,no',
+    'plugin'      => 'jojo_article'
+);
+
+$_options[] = array(
+    'id'          => 'article_sidebar_exclude_current',
+    'category'    => 'Articles',
+    'label'       => 'Exclude current article from list',
+    'description' => 'Exclude the article from the sidebar list when on that articles page',
+    'type'        => 'radio',
+    'default'     => 'no',
+    'options'     => 'yes,no',
+    'plugin'      => 'jojo_article'
+);
 $_options[] = array(
     'id'          => 'product_inplacesitemap',
     'category'    => 'Products',
@@ -198,16 +198,6 @@ $_options[] = array(
     'plugin'      => 'jojo_cart_products_wine'
 );
 
-$_options[] = array(
-    'id'          => 'product_enable_categories',
-    'category'    => 'Products',
-    'label'       => 'product Categories',
-    'description' => 'Allows multiple product collections by category under their own URLs',
-    'type'        => 'radio',
-    'default'     => 'no',
-    'options'     => 'yes,no',
-    'plugin'      => 'jojo_cart_products_wine'
-);
 
 $_options[] = array(
     'id'          => 'product_show_NA_products',
@@ -218,4 +208,15 @@ $_options[] = array(
     'default'     => 'no',
     'options'     => 'yes,no',
     'plugin'      => 'jojo_cart_products_wine'
+);
+
+$_options[] = array(
+    'id'          => 'article_meta_description',
+    'category'    => 'Articles',
+    'label'       => 'Dynamic article meta description',
+    'description' => 'A dynamically built meta description template to use for articles, which will assist with SEO. Variables to use are [title], [author], [site], [body].',
+    'type'        => 'textarea',
+    'default'     => '[title], an article on [site]. [body]...',
+    'options'     => '',
+    'plugin'      => 'jojo_article'
 );

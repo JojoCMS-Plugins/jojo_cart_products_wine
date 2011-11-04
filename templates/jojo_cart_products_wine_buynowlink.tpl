@@ -1,1 +1,1 @@
-<a href="{$SITEURL}/cart/add/{$prodlinkcode}" rel="nofollow">Buy Now</a>
+<a href="{$SITEURL}/cart/add/{$prodlinkcode}" rel="nofollow" class="button">Buy Now</a>
