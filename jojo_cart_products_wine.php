@@ -293,9 +293,10 @@ class jojo_plugin_jojo_cart_products_wine extends JOJO_Plugin
 
     private static function ordersort($a, $b)
     {
-         if ($a['pr_display_order']) {
-            return strcmp($a['pr_display_order'],$b['pr_display_order']);
+        if ($a['pr_display_order'] == $b['pr_display_order']) {
+            return 0;
         }
+        return ($a['pr_display_order'] < $b['pr_display_order']) ? -1 : 1;
     }
 
     private static function formatname($format='[brand] [region] [variety] [vintage]', $item=false)
