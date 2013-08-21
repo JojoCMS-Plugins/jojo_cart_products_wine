@@ -470,6 +470,15 @@ class jojo_plugin_jojo_cart_products_wine extends JOJO_Plugin
                $smarty->assign('commenthtml', $commenthtml);
             }
 
+            /* Get other Vintages */
+            $othervintages = Jojo::selectQuery("SELECT productid FROM {product} WHERE pr_name = ? AND pr_variety = ? AND productid != ? AND pr_category=? ORDER BY pr_display_order", array($product['pr_name'], $product['pr_variety'], $productid, $product['pr_category']));
+            if ($othervintages) {
+                foreach ($othervintages as &$o) {
+                    $o = self::getItemsById($o['productid']);
+                }
+            }
+            $smarty->assign('othervintages', $othervintages);
+
              /* Logged in user? */
             if ($_USERID) {
                 /* Look for per user availability */
