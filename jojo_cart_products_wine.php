@@ -16,7 +16,7 @@
 
 class jojo_plugin_jojo_cart_products_wine extends JOJO_Plugin
 {
-    function getProductDetails($code)
+    static function getProductDetails($code)
     {
 
         preg_match('/(.+)(_case)/', $code, $matches);
@@ -104,12 +104,12 @@ class jojo_plugin_jojo_cart_products_wine extends JOJO_Plugin
     }
 
     /* a  filter for sorting items in the shopping cart */
-    function sort_cart_items($items) {
+    static function sort_cart_items($items) {
         uasort($items, array('jojo_plugin_jojo_cart_products_wine', '_compare'));
         return $items;
     }
 
-    function _compare($a, $b)
+    private static function _compare($a, $b)
     {
         if ($a['categoryorder'] != $b['categoryorder']) {
             return ($a['categoryorder'] < $b['categoryorder']) ? -1 : 1;
@@ -122,7 +122,7 @@ class jojo_plugin_jojo_cart_products_wine extends JOJO_Plugin
     }
 
     /* a content filter for inserting buy now buttons */
-    function buyNow($content)
+    static function buyNow($content)
     {
         global $smarty;
 
@@ -207,6 +207,7 @@ class jojo_plugin_jojo_cart_products_wine extends JOJO_Plugin
 
     /* clean items for output */
     static function cleanItems($items, $exclude=false, $include=false) {
+        global $_USERID;
         $now    = time();
         foreach ($items as $k=>&$i){
             $pagedata = Jojo_Plugin_Core::cleanItems(array($i), $include);
@@ -244,7 +245,8 @@ class jojo_plugin_jojo_cart_products_wine extends JOJO_Plugin
             $nameformat = isset($i['nameformat_index']) && $i['nameformat_index'] ? $i['nameformat_index'] : '[brand] [region] [variety] [vintage]';
             $i['title']  = self::formatname($nameformat, $i);
             // Snip for the index description
-            $i['bodysnip'] = array_shift(Jojo::iExplode('[[snip]]', $i['pr_body']));
+            $i['bodysnip'] = Jojo::iExplode('[[snip]]', $i['pr_body']);
+            $i['bodysnip'] = array_shift($i['bodysnip']);
             /* Strip all tags and template include code ie [[ ]] */
             $i['bodysnip'] = strpos($i['bodysnip'], '[[')!==false ? preg_replace('/\[\[.*?\]\]/', '',  $i['bodysnip']) : $i['bodysnip'];
             $i['bodyplain'] = trim(strip_tags($i['bodysnip']));
@@ -368,11 +370,12 @@ class jojo_plugin_jojo_cart_products_wine extends JOJO_Plugin
         if ($categorydata['type']=='index') {
             $categoryid = 'all';
         } elseif ($categorydata['type']=='parent') {
-            $childcategories = Jojo::selectQuery("SELECT productcategoryid FROM {page} p  LEFT JOIN {productcategory} c ON (c.pageid=p.pageid) WHERE pg_parent = ? AND pg_link = 'jojo_plugin_jojo_cart_products_wine'", $pageid);
+            $childcategories = Jojo::selectQuery("SELECT * FROM {page} p  LEFT JOIN {productcategory} c ON (c.pageid=p.pageid) WHERE pg_parent = ? AND pg_link = 'jojo_plugin_jojo_cart_products_wine'", $pageid);
             foreach ($childcategories as $c) {
                 $categoryid[] = $c['productcategoryid'];
             }
             $categoryid[] = $categorydata['productcategoryid'];
+            $smarty->assign('childcategories', $childcategories);
         } else {
             $categoryid = $categorydata['productcategoryid'];
         }

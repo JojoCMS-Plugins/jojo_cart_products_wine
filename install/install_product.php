@@ -83,6 +83,7 @@ $query = "
       `dateformat` varchar(255) NOT NULL default '%e %b %Y',
       `snippet` varchar(255) NOT NULL default '400',
       `readmore` varchar(255) NOT NULL default '> Read more',
+      `pc_image` VARCHAR(255) NOT NULL,
       `thumbnail` varchar(255) NOT NULL default 's150',
       `mainimage` varchar(255) NOT NULL default 'v60000',
       `nameformat` varchar(255) NOT NULL default '[brand] [region] [variety] [vintage]',

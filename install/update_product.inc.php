@@ -522,6 +522,15 @@ $default_fd[$table]['pc_display_order'] = array(
         'fd_mode' => "advanced",
     );
     
+// Image Field
+$default_fd[$table]['pc_image'] = array(
+        'fd_name' => "Image",
+        'fd_type' => "fileupload",
+        'fd_order' => $o++,
+        'fd_tabname' => "Content",
+        'fd_mode' => "standard",
+    );
+
 // Name Format fields
 $default_fd[$table]['nameformat'] = array(
         'fd_name' => "Name",
