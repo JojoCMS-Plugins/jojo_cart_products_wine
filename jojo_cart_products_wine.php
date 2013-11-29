@@ -32,16 +32,20 @@ class jojo_plugin_jojo_cart_products_wine extends JOJO_Plugin
         $product = Jojo::selectRow("SELECT productid FROM {product} WHERE pr_code = ? and status = 1", $pcode);
 
         /* attempt to match by id if code didn't work */
-        if(empty($product)){
+        if(!$product){
             $pcode = str_replace('product', '', $pcode);
             $product = Jojo::selectRow("SELECT productid FROM {product} WHERE productid = ? and status = 1", $pcode);
         }
          
-        if(empty($product)){
+        if(!$product){
             return false;
         }
         
         $product = self::getItemsById($product['productid']);
+        
+        if(!$product){
+            return false;
+        }
 
         $nameformat = isset($product['nameformat_cart']) && $product['nameformat_cart'] ? $product['nameformat_cart'] : '[brand] [region] [variety] [vintage]';
         $formattedname = self::formatname($nameformat, $product);
@@ -81,29 +85,8 @@ class jojo_plugin_jojo_cart_products_wine extends JOJO_Plugin
                       'url'            => self::getProductUrl($product['productid'])
                       );
 
-
-        /* Logged in user? */
-        global $_USERID;
-        if (!$_USERID) {
-            /* Not logged in and product available, cache and return */
-            return $product['pr_caseprice'] != 'NA' ? $data : false;
-        } else {
-
-            /* Look for per user pricing */
-            $userPricing = Jojo::selectRow('SELECT * FROM {product_user_price} WHERE productid = ? AND userid = ?', array($product['productid'], $_USERID));
-            if ($userPricing) {
-                if (!$userPricing || $userPricing['unitprice'] == 'NA') {
-                    /* User can't purchase this product */
-                    return false;
-                } elseif ($userPricing['unitprice'] !== '') {
-                    $user = Jojo::selectRow('SELECT user_pricing FROM {user} WHERE userid = ?', $_USERID);
-                    $data['price'] = $userPricing['unitprice'];
-                    $data['currency'] = $user['user_pricing'];
-                }
-            }
-            return $data;
-        }
-    }
+        return $data;
+     }
 
     /* a  filter for sorting items in the shopping cart */
     static function sort_cart_items($items) {
@@ -213,23 +196,27 @@ class jojo_plugin_jojo_cart_products_wine extends JOJO_Plugin
     static function cleanItems($items, $exclude=false, $include=false) {
         global $_USERID;
         $now    = time();
+        if ($_USERID) {
+            /* Get user pricing */
+            $userPricing = Jojo::selectAssoc('SELECT productid as id, p.* FROM {product_user_price} p WHERE userid = ?', array($_USERID));
+        }
         foreach ($items as $k=>&$i){
             $pagedata = Jojo_Plugin_Core::cleanItems(array($i), $include);
             if (!$pagedata || $i['pr_livedate']>$now || (!empty($i['pr_expirydate']) && $i['pr_expirydate']<$now) || (!empty($i['productid']) && $i['productid']==$exclude)  || (!empty($i['pr_url']) && $i['pr_url']==$exclude)) {
                 unset($items[$k]);
                 continue;
             }
+            $productid = $i['productid'];
              /* Logged in user? */
-            if ($_USERID) {
-
+            if ($_USERID && isset($userPricing[$productid])) {
                 /* Look for per user availability */
-                $userPricing = Jojo::selectRow('SELECT * FROM {product_user_price} WHERE productid = ? AND userid = ?', array($i['productid'], $_USERID));
-                if ($userPricing && $userPricing['unitprice'] == 'NA') {
+                if ($userPricing[$productid]['case_price'] == 'NA') {
                     /* User can't purchase this varient */
                     unset($items[$k]);
                     continue;
                 } elseif ($userPricing) {
-                  $i['pr_caseprice'] = $userPricing['unitprice'];
+                  $i['pr_caseprice'] = $userPricing[$productid]['case_price'] ? $userPricing[$productid]['case_price'] : $i['pr_caseprice'];
+                  $i['pr_price'] = $userPricing[$productid]['bottle_price'] ? $userPricing[$productid]['bottle_price'] : $i['pr_price'];
                 }
             } else {
                 if ($i['pr_caseprice'] == 'NA' && Jojo::getOption('product_show_NA_products', 'no')=='no') {
@@ -240,8 +227,8 @@ class jojo_plugin_jojo_cart_products_wine extends JOJO_Plugin
             }
             $i['pagetitle'] = $pagedata[0]['title'];
             $i['pageurl']   = $pagedata[0]['url'];
-            $i['id']        = $i['productid'];
-            $i['pr_code']   = $i['pr_code'] ? $i['pr_code'] : 'product' . $i['productid'];
+            $i['id']        = $productid;
+            $i['pr_code']   = $i['pr_code'] ? $i['pr_code'] : 'product' . $productid;
             $i['name']      = htmlspecialchars($i['pr_name'], ENT_COMPAT, 'UTF-8', false);
             $i['region']    = isset($i['pr_region']) ? htmlspecialchars($i['pr_region'], ENT_COMPAT, 'UTF-8', false) : '';
             $i['variety']   = htmlspecialchars($i['pr_variety'], ENT_COMPAT, 'UTF-8', false);
@@ -493,24 +480,6 @@ class jojo_plugin_jojo_cart_products_wine extends JOJO_Plugin
                 }
             }
             $smarty->assign('othervintages', $othervintages);
-
-             /* Logged in user? */
-            if ($_USERID) {
-                /* Look for per user availability */
-                $userPricing = Jojo::selectRow('SELECT * FROM {product_user_price} WHERE productid = ? AND userid = ?', array($productid, $_USERID));
-                if ($userPricing && $userPricing['unitprice'] == 'NA') {
-                    /* User can't purchase this varient */
-                  $product['pr_caseprice'] = 'This wine is not available for order';
-                }
-		elseif ($userPricing) {
-                  $product['pr_caseprice'] = $userPricing['unitprice'];
-                }
-            } else {
-                if ($product['pr_caseprice'] == 'NA') {
-                    /* Casual users can't purchase this product */
-                  $product['pr_caseprice'] = 'This wine is not available for order';
-                }
-            }
 
            /* Add breadcrumb */
             $breadcrumbs                      = $this->_getBreadCrumbs();

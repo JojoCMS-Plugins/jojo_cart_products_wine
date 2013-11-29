@@ -168,7 +168,8 @@ $query = "
     CREATE TABLE {product_user_price} (
       `userid` int(11) NOT NULL default '0',
       `productid` int(11) NOT NULL default '0',
-      `unitprice` varchar(7) NOT NULL default '0.00',
+      `bottle_price` varchar(7) NOT NULL default '',
+      `case_price` varchar(7) NOT NULL default '',
       PRIMARY KEY  (`userid`, `productid`)
     ) TYPE=MyISAM ;";
 

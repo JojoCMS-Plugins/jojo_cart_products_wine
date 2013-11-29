@@ -2,17 +2,19 @@
 
 <p>Enter the price for this customer, if this customer should not see a product then enter NA for the price.</p>
 
-<table class="adminZebraTable">
+<table class="table">
     <tr>
         <th>Product</th>
-        <th>Price per case</th>
+        <th>Bottle Price</th>
+        <th>Case Price</th>
     </tr>
 
 {assign var=prev value=''}
 {foreach from=$userproducts key=productcode item=p}
-    <tr class="{cycle values="row1,row2"}">
+    <tr>
         <td>{$p.pr_name} {$p.pr_variety} {$p.pr_vintage}</td>
-        <td><input style="text-align: right" type="text" size="6" name="fm_{$fd_field}_price[{$p.productid}]" value="{if isset($prices[$p.productid])}{$prices[$p.productid]}{else}NA{/if}" /><span class="currency"> {if $value}{$value}{else}{$OPTIONS.cart_default_currency}{/if}</span></td>
+        <td><input style="text-align: right" type="text" size="6" name="fm_{$fd_field}_userprices[{$p.productid}][bottle_price]" value="{if $prices[$p.productid]}{$prices[$p.productid].bottle_price}{else}{/if}" /><span class="currency"> {if $value}{$value}{else}{$OPTIONS.cart_default_currency}{/if}</span></td>
+        <td><input style="text-align: right" type="text" size="6" name="fm_{$fd_field}_userprices[{$p.productid}][case_price]" value="{if $prices[$p.productid]}{$prices[$p.productid].case_price}{else}{/if}" /><span class="currency"> {if $value}{$value}{else}{$OPTIONS.cart_default_currency}{/if}</span></td>
     </tr>
 {/foreach}
 </table>
