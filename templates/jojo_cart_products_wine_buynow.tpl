@@ -1,6 +1,3 @@
-<div class="buynow">
-<form style="display:inline;" action="{$SITEURL}/cart/add/{$prodcode}/" class="buynowbutton">
-{if $OPTIONS.buy_now_image}<input type="image" src="{$OPTIONS.buy_now_image}"/>
-{else}<input type="submit" value="Add to cart" id="add[{$prodcode}]" name="add[{$prodcode}]"  class="button btn btn-default" onclick="document.activeElement=this"/>{/if}
-</form>
-</div>
+<a href="{$SECUREURL}/cart/add/x/" rel="nofollow">
+    <img src="images/buynow.gif" alt="buy _ now" width="200px" height="100px">
+</a>

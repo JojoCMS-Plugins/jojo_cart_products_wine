@@ -19,7 +19,7 @@ $o = 0;
 $default_td[$table] = array(
         'td_name' => "product",
         'td_primarykey' => "productid",
-        'td_displayfield' => "CONCAT(pr_name, ' ', pr_variety, ' ', pr_vintage)",
+        'td_displayfield' => "CONCAT(pr_name, ' ', if(CHAR_LENGTH(pr_designation) > 0, CONCAT(pr_designation, ' '), '') , pr_variety, ' ', pr_vintage)",
         'td_categorytable' => "productcategory",
         'td_categoryfield' => "pr_category",
         'td_rolloverfield' => "pr_desc",
@@ -46,7 +46,20 @@ $default_fd[$table]['productid'] = array(
         'fd_mode' => "advanced",
     );
 
-// Brand Field
+// Category Field
+$default_fd[$table]['pr_category'] = array(
+        'fd_name' => "Category",
+        'fd_type' => "dblist",
+        'fd_options' => "productcategory",
+        'fd_default' => "0",
+        'fd_size' => "20",
+        'fd_help' => "If categories are used, the category the Product belongs to.",
+        'fd_order' => $o++,
+        'fd_tabname' => "Content",
+        'fd_mode' => "advanced",
+    );
+
+// Name Fields
 $default_fd[$table]['pr_name'] = array(
         'fd_name' => "Brand",
         'fd_type' => "text",
@@ -57,7 +70,6 @@ $default_fd[$table]['pr_name'] = array(
         'fd_tabname' => "Content",
     );
 
-// Variant Name Field
 $default_fd[$table]['pr_region'] = array(
         'fd_name' => "Region Name",
         'fd_type' => "text",
@@ -67,7 +79,6 @@ $default_fd[$table]['pr_region'] = array(
         'fd_tabname' => "Content",
     );
 
-// Variant Name Field
 $default_fd[$table]['pr_variety'] = array(
         'fd_name' => "Variant Name",
         'fd_type' => "text",
@@ -77,7 +88,6 @@ $default_fd[$table]['pr_variety'] = array(
         'fd_tabname' => "Content",
     );
 
-// Vintage Field
 $default_fd[$table]['pr_vintage'] = array(
         'fd_name' => "Vintage",
         'fd_type' => "text",
@@ -87,10 +97,29 @@ $default_fd[$table]['pr_vintage'] = array(
         'fd_tabname' => "Content",
     );
 
+$default_fd[$table]['pr_designation'] = array(
+        'fd_name' => "Designation",
+        'fd_type' => "text",
+        'fd_size' => "60",
+        'fd_help' => "Any extra titles to include with the name (e.g. Single Vineyard).",
+        'fd_order' => $o++,
+        'fd_tabname' => "Content",
+    );
+
+// Class
+$default_fd[$table]['pr_class'] = array(
+        'fd_name' => "Wine Type",
+        'fd_type' => "radio",
+        'fd_options' => "white\nred\ndessert\nrose",
+        'fd_default' => "white",
+        'fd_help' => "Wine grouping (optionally used for styling, ordering, or separating)",
+        'fd_order' => $o++,
+        'fd_tabname' => "Content",
+    );
 // Display Order Field
 $default_fd[$table]['pr_display_order'] = array(
         'fd_name' => "Display Order",
-        'fd_type' => "order",
+        'fd_type' => "integer",
         'fd_order' => $o++,
         'fd_tabname' => "Content",
         'fd_mode' => "advanced",
@@ -172,19 +201,6 @@ $default_fd[$table]['pr_date'] = array(
         'fd_mode' => "standard",
     );
 
-// Category Field
-$default_fd[$table]['pr_category'] = array(
-        'fd_name' => "Category",
-        'fd_type' => "dblist",
-        'fd_options' => "productcategory",
-        'fd_default' => "0",
-        'fd_size' => "20",
-        'fd_help' => "If categories are used, the category the Product belongs to.",
-        'fd_order' => $o++,
-        'fd_tabname' => "Content",
-        'fd_mode' => "advanced",
-    );
-
 // Language Field
 $default_fd[$table]['pr_language'] = array(
         'fd_name' => "Language",
@@ -211,6 +227,130 @@ $default_fd[$table]['pr_htmllang'] = array(
         'fd_mode' => "advanced",
     );
 
+
+$o=0;
+
+$default_fd[$table]['tasting'] = array(
+        'fd_name' => "Tasting Note",
+        'fd_type' => "textarea",
+        'fd_rows' => "4",
+        'fd_help' => "",
+        'fd_order' => $o++,
+        'fd_tabname' => "Notes",
+        'fd_mode' => "advanced",
+    );
+
+$default_fd[$table]['foodmatch'] = array(
+        'fd_name' => "Food Matching",
+        'fd_type' => "textarea",
+        'fd_rows' => "4",
+        'fd_help' => "",
+        'fd_order' => $o++,
+        'fd_tabname' => "Notes",
+        'fd_mode' => "advanced",
+    );
+
+$default_fd[$table]['cellaring'] = array(
+        'fd_name' => "Cellaring",
+        'fd_type' => "text",
+        'fd_size' => "60",
+        'fd_order' => $o++,
+        'fd_tabname' => "Notes",
+        'fd_mode' => "standard",
+    );
+
+$default_fd[$table]['winemaker'] = array(
+        'fd_name' => "Winemaker",
+        'fd_type' => "text",
+        'fd_size' => "60",
+        'fd_order' => $o++,
+        'fd_tabname' => "Notes",
+        'fd_mode' => "standard",
+    );
+
+$default_fd[$table]['winemaking'] = array(
+        'fd_name' => "Winemaking",
+        'fd_type' => "textarea",
+        'fd_rows' => "4",
+        'fd_help' => "",
+        'fd_order' => $o++,
+        'fd_tabname' => "Notes",
+        'fd_mode' => "advanced",
+    );
+
+$default_fd[$table]['alcohol'] = array(
+        'fd_name' => "Alcohol",
+        'fd_type' => "text",
+        'fd_size' => "30",
+        'fd_unit' => "%",
+        'fd_help' => "",
+        'fd_order' => $o++,
+        'fd_tabname' => "Notes",
+    );
+$default_fd[$table]['ph'] = array(
+        'fd_name' => "pH",
+        'fd_type' => "text",
+        'fd_size' => "30",
+        'fd_help' => "",
+        'fd_order' => $o++,
+        'fd_tabname' => "Notes",
+    );
+$default_fd[$table]['ta'] = array(
+        'fd_name' => "Total Acidity",
+        'fd_type' => "text",
+        'fd_size' => "30",
+        'fd_unit' => "g/L",
+        'fd_help' => "",
+        'fd_order' => $o++,
+        'fd_tabname' => "Notes",
+    );
+$default_fd[$table]['sugar'] = array(
+        'fd_name' => "Residual Sugar",
+        'fd_type' => "text",
+        'fd_size' => "30",
+        'fd_unit' => "g/L",
+        'fd_help' => "",
+        'fd_order' => $o++,
+        'fd_tabname' => "Notes",
+    );
+
+$default_fd[$table]['viticulturist'] = array(
+        'fd_name' => "Viticulturist",
+        'fd_type' => "text",
+        'fd_size' => "60",
+        'fd_order' => $o++,
+        'fd_tabname' => "Notes",
+        'fd_mode' => "standard",
+    );
+
+$default_fd[$table]['viticulture'] = array(
+        'fd_name' => "Viticulture",
+        'fd_type' => "textarea",
+        'fd_rows' => "4",
+        'fd_help' => "",
+        'fd_order' => $o++,
+        'fd_tabname' => "Notes",
+        'fd_mode' => "advanced",
+    );
+
+$default_fd[$table]['harvestdate'] = array(
+        'fd_name' => "Harvest Dates",
+        'fd_type' => "text",
+        'fd_size' => "60",
+        'fd_order' => $o++,
+        'fd_tabname' => "Notes",
+        'fd_mode' => "standard",
+    );
+
+$default_fd[$table]['brix'] = array(
+        'fd_name' => "Brix",
+        'fd_type' => "text",
+        'fd_size' => "30",
+        'fd_unit' => "%",
+        'fd_help' => "Average Brix at Harvest",
+        'fd_order' => $o++,
+        'fd_tabname' => "Notes",
+    );
 
 /* Pricing Tab */
 
@@ -537,7 +677,7 @@ $default_fd[$table]['nameformat'] = array(
         'fd_type' => "text",
         'fd_size' => 80,
         'fd_order' => $o++,
-        'fd_help' => "Name format to use on the wine page - choose a combination of [brand], [region], [variety], [vintage]",
+        'fd_help' => "Name format to use on the wine page - choose a combination of [brand], [region], [variety], [vintage], [designation]",
         'fd_tabname' => "Content",
         'fd_mode' => "advanced",
     );
@@ -547,7 +687,7 @@ $default_fd[$table]['nameformat_index'] = array(
         'fd_type' => "text",
         'fd_size' => 80,
         'fd_order' => $o++,
-        'fd_help' => "Name format to use on the index page - choose a combination of [brand], [region], [variety], [vintage]",
+        'fd_help' => "Name format to use on the index page - choose a combination of [brand], [region], [variety], [vintage], [designation]",
         'fd_tabname' => "Content",
         'fd_mode' => "advanced",
     );
@@ -557,7 +697,7 @@ $default_fd[$table]['nameformat_menu'] = array(
         'fd_type' => "text",
         'fd_size' => 80,
         'fd_order' => $o++,
-        'fd_help' => "Name format to use in the navigation - choose a combination of [brand], [region], [variety], [vintage]",
+        'fd_help' => "Name format to use in the navigation - choose a combination of [brand], [region], [variety], [vintage], [designation]",
         'fd_tabname' => "Content",
         'fd_mode' => "advanced",
     );
@@ -567,7 +707,7 @@ $default_fd[$table]['nameformat_cart'] = array(
         'fd_type' => "text",
         'fd_size' => 80,
         'fd_order' => $o++,
-        'fd_help' => "Name format to use on the cart pages - choose a combination of [brand], [region], [variety], [vintage]",
+        'fd_help' => "Name format to use on the cart pages - choose a combination of [brand], [region], [variety], [vintage], [designation]",
         'fd_tabname' => "Content",
         'fd_mode' => "advanced",
     );

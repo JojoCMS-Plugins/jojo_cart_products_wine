@@ -29,13 +29,18 @@ class jojo_plugin_jojo_cart_products_wine extends JOJO_Plugin
         }
 
         /* attempt to match by product code */
-        $product = Jojo::selectRow("SELECT * FROM {product} WHERE pr_code = ? and status = 1", $pcode);
+        $product = Jojo::selectRow("SELECT productid FROM {product} WHERE pr_code = ? and status = 1", $pcode);
 
         /* attempt to match by id if code didn't work */
         if(empty($product)){
-            $product = Jojo::selectRow("SELECT * FROM {product} WHERE productid = ? and status = 1", $code);
+            $pcode = str_replace('product', '', $pcode);
+            $product = Jojo::selectRow("SELECT productid FROM {product} WHERE productid = ? and status = 1", $pcode);
         }
          
+        if(empty($product)){
+            return false;
+        }
+        
         $product = self::getItemsById($product['productid']);
 
         $nameformat = isset($product['nameformat_cart']) && $product['nameformat_cart'] ? $product['nameformat_cart'] : '[brand] [region] [variety] [vintage]';
@@ -56,7 +61,7 @@ class jojo_plugin_jojo_cart_products_wine extends JOJO_Plugin
 
         /* prepare return array - key names are important */
         $data = array('id'             => $product['pr_code'] . ( $case ? '_case' : '' ),
-                      'name'           => $formattedname . ( $case ? ' (case of' . $product['pr_casesize'] . ')'  : '' ),
+                      'name'           => $formattedname . ( $case ? ' (case of ' . $product['pr_casesize'] . ')'  : '' ),
                       'brand'          => $product['name'],
                       'variant'        => (isset($product['pr_region']) && $product['region'] ? $product['region'] . ' ' : '') . $product['variety'] . ' '. $product['vintage'],
 		              'productorder'   => $product['pr_display_order'],
@@ -79,28 +84,25 @@ class jojo_plugin_jojo_cart_products_wine extends JOJO_Plugin
 
         /* Logged in user? */
         global $_USERID;
-        if (!$_USERID && $product['pr_caseprice'] != 'NA') {
+        if (!$_USERID) {
             /* Not logged in and product available, cache and return */
-            return $data;
-        } elseif (!$_USERID) {
-            /* Not logged in but product not available */
-                return false;
-        }
+            return $product['pr_caseprice'] != 'NA' ? $data : false;
+        } else {
 
-        /* Look for per user pricing */
-        $userPricing = Jojo::selectRow('SELECT * FROM {product_user_price} WHERE productid = ? AND userid = ?', array($product['productid'], $_USERID));
-        if ($userPricing) {
-            if (!$userPricing || $userPricing['unitprice'] == 'NA') {
-                /* User can't purchase this product */
-                return false;
-            } elseif ($userPricing['unitprice'] !== '') {
-                $user = Jojo::selectRow('SELECT * FROM {user} WHERE userid = ?', $_USERID);
-                $data['price'] = $userPricing['unitprice'];
-                $data['currency'] = $user['user_pricing'];
+            /* Look for per user pricing */
+            $userPricing = Jojo::selectRow('SELECT * FROM {product_user_price} WHERE productid = ? AND userid = ?', array($product['productid'], $_USERID));
+            if ($userPricing) {
+                if (!$userPricing || $userPricing['unitprice'] == 'NA') {
+                    /* User can't purchase this product */
+                    return false;
+                } elseif ($userPricing['unitprice'] !== '') {
+                    $user = Jojo::selectRow('SELECT user_pricing FROM {user} WHERE userid = ?', $_USERID);
+                    $data['price'] = $userPricing['unitprice'];
+                    $data['currency'] = $user['user_pricing'];
+                }
             }
+            return $data;
         }
-
-        return $data;
     }
 
     /* a  filter for sorting items in the shopping cart */
@@ -115,6 +117,8 @@ class jojo_plugin_jojo_cart_products_wine extends JOJO_Plugin
             return ($a['categoryorder'] < $b['categoryorder']) ? -1 : 1;
         } elseif ($a['productorder'] != $b['productorder']) {
             return ($a['productorder'] < $b['productorder']) ? -1 : 1;
+        } elseif ($a['name'] != $b['name']) {
+            return ($a['name'] < $b['name']) ? -1 : 1;
         } elseif ($a['case'] != $b['case']) {
             return (!$a['case']) ? -1 : 1;
         }
@@ -157,7 +161,7 @@ class jojo_plugin_jojo_cart_products_wine extends JOJO_Plugin
 */
 
     /* Get products  */
-    static function getProducts($num=false, $start = 0, $categoryid='all', $sortby='name', $exclude=false, $include=false) {
+    static function getProducts($num=false, $start = 0, $categoryid='all', $sortby='pr_display_order, pr_name, pr_variety', $exclude=false, $include=false) {
         global $page;
         if ($categoryid == 'all' && $include != 'alllanguages') {
             $categoryid = array();
@@ -180,7 +184,7 @@ class jojo_plugin_jojo_cart_products_wine extends JOJO_Plugin
         $query .= " FROM {product} pr";
         $query .= " LEFT JOIN {productcategory} c ON (pr.pr_category=c.productcategoryid) LEFT JOIN {page} p ON (c.pageid=p.pageid)";
         $query .= $shownumcomments ? " LEFT JOIN {comment} com ON (com.itemid = pr.productid AND com.plugin = 'jojo_cart_products_wine')" : '';
-        $query .= " WHERE 1" . $categoryquery;
+        $query .= " WHERE pr.status=1" . $categoryquery;
         $query .= $shownumcomments ? " GROUP BY productid" : '';
         $query .= $num ? " ORDER BY $sortby LIMIT $start,$num" : '';
         $products = Jojo::selectQuery($query);
@@ -190,7 +194,7 @@ class jojo_plugin_jojo_cart_products_wine extends JOJO_Plugin
     }
 
      /* get items by id - accepts either an array of ids returning a results array, or a single id returning a single result  */
-    static function getItemsById($ids = false, $sortby='pr_date desc', $include=false) {
+    static function getItemsById($ids = false, $sortby='pr_display_order, pr_name, pr_variety', $include=false) {
         $query  = "SELECT pr.*, c.*, p.pageid, pg_menutitle, pg_title, pg_url, pg_status, pg_livedate, pg_expirydate";
         $query .= " FROM {product} pr";
         $query .= " LEFT JOIN {productcategory} c ON (pr.pr_category=c.productcategoryid) LEFT JOIN {page} p ON (c.pageid=p.pageid)";
@@ -234,16 +238,19 @@ class jojo_plugin_jojo_cart_products_wine extends JOJO_Plugin
                     continue;
                 }
             }
-           $i['pagetitle'] = $pagedata[0]['title'];
+            $i['pagetitle'] = $pagedata[0]['title'];
             $i['pageurl']   = $pagedata[0]['url'];
-            $i['id']           = $i['productid'];
-            $i['name']        = htmlspecialchars($i['pr_name'], ENT_COMPAT, 'UTF-8', false);
-             $i['region']   = isset($i['pr_region']) ? htmlspecialchars($i['pr_region'], ENT_COMPAT, 'UTF-8', false) : '';
-            $i['variety']        = htmlspecialchars($i['pr_variety'], ENT_COMPAT, 'UTF-8', false);
+            $i['id']        = $i['productid'];
+            $i['pr_code']   = $i['pr_code'] ? $i['pr_code'] : 'product' . $i['productid'];
+            $i['name']      = htmlspecialchars($i['pr_name'], ENT_COMPAT, 'UTF-8', false);
+            $i['region']    = isset($i['pr_region']) ? htmlspecialchars($i['pr_region'], ENT_COMPAT, 'UTF-8', false) : '';
+            $i['variety']   = htmlspecialchars($i['pr_variety'], ENT_COMPAT, 'UTF-8', false);
             $i['vintage']   = htmlspecialchars($i['pr_vintage'], ENT_COMPAT, 'UTF-8', false);
+            $i['designation']   = htmlspecialchars($i['pr_designation'], ENT_COMPAT, 'UTF-8', false);
             $i['seotitle']        = $i['name'] . ' ' . ($i['region'] ? $i['region'] . ' ' : '') . $i['variety'] . ' ' . $i['vintage'];
             $nameformat = isset($i['nameformat_index']) && $i['nameformat_index'] ? $i['nameformat_index'] : '[brand] [region] [variety] [vintage]';
             $i['title']  = self::formatname($nameformat, $i);
+            $i['title_novintage']  = self::formatname($nameformat, $i, true);
             // Snip for the index description
             $i['bodysnip'] = Jojo::iExplode('[[snip]]', $i['pr_body']);
             $i['bodysnip'] = array_shift($i['bodysnip']);
@@ -274,10 +281,10 @@ class jojo_plugin_jojo_cart_products_wine extends JOJO_Plugin
             switch ($sortby) {
               case "name":
                 $order="name";
-                $reverse = true;
                 break;
               case "order":
                 $order="order";
+                usort($items, array('Jojo_Plugin_Jojo_cart_products_wine','namesort'));
                 break;
             }
             usort($items, array('Jojo_Plugin_Jojo_cart_products_wine', $order . 'sort'));
@@ -289,6 +296,9 @@ class jojo_plugin_jojo_cart_products_wine extends JOJO_Plugin
     private static function namesort($a, $b)
     {
          if ($a['title']) {
+            if ($a['title_novintage']==$b['title_novintage']) {
+                return ($a['pr_vintage'] > $b['pr_vintage']) ? -1 : 1;
+            }
             return strcmp($a['title'],$b['title']);
         }
     }
@@ -301,20 +311,22 @@ class jojo_plugin_jojo_cart_products_wine extends JOJO_Plugin
         return ($a['pr_display_order'] < $b['pr_display_order']) ? -1 : 1;
     }
 
-    private static function formatname($format='[brand] [region] [variety] [vintage]', $item=false)
+    private static function formatname($format='[brand] [region] [variety] [vintage]', $item=false, $novintage=false)
     {
         if(!$item) return false;
         $namefilters = array(
                 '[brand]',
                 '[region]',
                 '[variety]',
-                '[vintage]'
+                '[vintage]',
+                '[designation]'
                );
         $replace = array(
                 $item['name'],
                 $item['region'],
                 $item['variety'],
-                $item['vintage']
+                ($novintage ? '' : $item['vintage']),
+                $item['designation']
                 );
         $formattedname = str_replace($namefilters, $replace, $format);
         return $formattedname;
@@ -663,6 +675,7 @@ class jojo_plugin_jojo_cart_products_wine extends JOJO_Plugin
             /* Trim items down to first page and add to tree*/
             $products = array_slice($products, 0, $productsperpage);
             foreach ($products as $a) {
+                $a['title'] = self::formatname($a['nameformat'], $a);
                 $producttree->addNode($a['id'], $parent, $a['title'], $a['url']);
             }
 
@@ -946,6 +959,10 @@ class jojo_plugin_jojo_cart_products_wine extends JOJO_Plugin
             $mldata = Jojo::getMultiLanguageData();
             $htmllanguage =  $mldata['sectiondata'][Jojo::getSectionRoot($product['pageid'])]['lc_defaultlang'];
             Jojo::updateQuery("UPDATE {product} SET `pr_htmllang`=? WHERE `productid`=?", array($htmllanguage, $id));
+        }
+        if (empty($product['pr_url'])) {
+            $url = Jojo::cleanURL(str_replace('ü', 'u', $ap['title']));
+            Jojo::updateQuery("UPDATE {product} SET `pr_url`=? WHERE `productid`=?", array($url, $id));
         }
         
         Jojo::updateQuery("UPDATE {option} SET `op_value`=? WHERE `op_name`='product_last_updated'", time());
