@@ -150,7 +150,16 @@ $default_fd[$table]['pr_url'] = array(
 
 // Image Field
 $default_fd[$table]['pr_image'] = array(
-        'fd_name' => "Image",
+        'fd_name' => "Bottle Image",
+        'fd_type' => "fileupload",
+        'fd_order' => $o++,
+        'fd_tabname' => "Content",
+        'fd_mode' => "standard",
+    );
+
+// Image Field
+$default_fd[$table]['pr_image2'] = array(
+        'fd_name' => "Label Image",
         'fd_type' => "fileupload",
         'fd_order' => $o++,
         'fd_tabname' => "Content",

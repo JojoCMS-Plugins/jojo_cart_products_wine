@@ -29,6 +29,7 @@ $query = "
         `foodmatch` text NULL,
         `cellaring` VARCHAR(100) NOT NULL default '',
         `pr_image` VARCHAR(255) NOT NULL,
+        `pr_image2` VARCHAR(255) NOT NULL,
         `pr_tastingnote` VARCHAR(255) NOT NULL,
         `pr_category` int(11) NOT NULL default '0',
         `pr_language` VARCHAR(100) NOT NULL default 'en',

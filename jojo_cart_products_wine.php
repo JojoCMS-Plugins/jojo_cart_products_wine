@@ -181,7 +181,7 @@ class jojo_plugin_jojo_cart_products_wine extends JOJO_Plugin
         $query  = "SELECT pr.*, c.*, p.pageid, pg_menutitle, pg_title, pg_url, pg_status, pg_livedate, pg_expirydate";
         $query .= " FROM {product} pr";
         $query .= " LEFT JOIN {productcategory} c ON (pr.pr_category=c.productcategoryid) LEFT JOIN {page} p ON (c.pageid=p.pageid)";
-        $query .=  is_array($ids) ? " WHERE productid IN ('". implode("',' ", $ids) . "')" : " WHERE productid=$ids";
+        $query .=  is_array($ids) ? " WHERE productid IN ('". implode("',' ", $ids) . "')" : " WHERE productid='" . $ids . "'";
         $items = Jojo::selectQuery($query);
         $items = self::cleanItems($items, '', $include);
         if ($items) {
@@ -480,6 +480,12 @@ class jojo_plugin_jojo_cart_products_wine extends JOJO_Plugin
                 }
             }
             $smarty->assign('othervintages', $othervintages);
+
+            /* Get Awards if used */
+            if (class_exists('Jojo_Plugin_Jojo_cart_product_award')) {
+               $awards = Jojo_Plugin_Jojo_cart_product_award::getProductAwards('', '', $product['id']);
+               $smarty->assign('awards', $awards);
+            }
 
            /* Add breadcrumb */
             $breadcrumbs                      = $this->_getBreadCrumbs();
