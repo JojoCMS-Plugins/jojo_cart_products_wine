@@ -229,11 +229,11 @@ class jojo_plugin_jojo_cart_products_wine extends JOJO_Plugin
             $i['pageurl']   = $pagedata[0]['url'];
             $i['id']        = $productid;
             $i['pr_code']   = $i['pr_code'] ? $i['pr_code'] : 'product' . $productid;
-            $i['name']      = htmlspecialchars($i['pr_name'], ENT_COMPAT, 'UTF-8', false);
-            $i['region']    = isset($i['pr_region']) ? htmlspecialchars($i['pr_region'], ENT_COMPAT, 'UTF-8', false) : '';
-            $i['variety']   = htmlspecialchars($i['pr_variety'], ENT_COMPAT, 'UTF-8', false);
-            $i['vintage']   = htmlspecialchars($i['pr_vintage'], ENT_COMPAT, 'UTF-8', false);
-            $i['designation']   = htmlspecialchars($i['pr_designation'], ENT_COMPAT, 'UTF-8', false);
+            $i['name']      = htmlspecialchars(trim($i['pr_name']), ENT_COMPAT, 'UTF-8', false);
+            $i['region']    = isset($i['pr_region']) ? htmlspecialchars(trim($i['pr_region']), ENT_COMPAT, 'UTF-8', false) : '';
+            $i['variety']   = htmlspecialchars(htmlentities(trim($i['pr_variety'])), ENT_COMPAT, 'UTF-8', false);
+            $i['vintage']   = htmlspecialchars(trim($i['pr_vintage']), ENT_COMPAT, 'UTF-8', false);
+            $i['designation']   = htmlspecialchars(trim($i['pr_designation']), ENT_COMPAT, 'UTF-8', false);
             $i['seotitle']        = $i['name'] . ' ' . ($i['region'] ? $i['region'] . ' ' : '') . $i['variety'] . ' ' . $i['vintage'];
             $nameformat = isset($i['nameformat_index']) && $i['nameformat_index'] ? $i['nameformat_index'] : '[brand] [region] [variety] [vintage]';
             $i['title']  = self::formatname($nameformat, $i);
@@ -254,6 +254,10 @@ class jojo_plugin_jojo_cart_products_wine extends JOJO_Plugin
             $i['image'] = !empty($i['pr_image']) ? 'products/' . urlencode($i['pr_image']) : '';
             $i['url']          = self::getProductUrl($i['productid'], $i['pr_url'], $i['title'], $i['pageid'], $i['pr_category']);
             $i['plugin']     = 'jojo_cart_products_wine';
+            /* Get Awards if used */
+            if (class_exists('Jojo_Plugin_Jojo_cart_product_award')) {
+               $i['awards'] = Jojo_Plugin_Jojo_cart_product_award::getProductAwards('', '', $i['id'], '', false);
+            }
             unset($items[$k]['pr_bbbody']);
         }
         $items = array_values($items);
@@ -480,12 +484,6 @@ class jojo_plugin_jojo_cart_products_wine extends JOJO_Plugin
                 }
             }
             $smarty->assign('othervintages', $othervintages);
-
-            /* Get Awards if used */
-            if (class_exists('Jojo_Plugin_Jojo_cart_product_award')) {
-               $awards = Jojo_Plugin_Jojo_cart_product_award::getProductAwards('', '', $product['id']);
-               $smarty->assign('awards', $awards);
-            }
 
            /* Add breadcrumb */
             $breadcrumbs                      = $this->_getBreadCrumbs();
@@ -936,7 +934,7 @@ class jojo_plugin_jojo_cart_products_wine extends JOJO_Plugin
             Jojo::updateQuery("UPDATE {product} SET `pr_htmllang`=? WHERE `productid`=?", array($htmllanguage, $id));
         }
         if (empty($product['pr_url'])) {
-            $url = Jojo::cleanURL(str_replace('ü', 'u', $ap['title']));
+            $url = Jojo::cleanURL(str_replace('ü', 'u', $product['title']));
             Jojo::updateQuery("UPDATE {product} SET `pr_url`=? WHERE `productid`=?", array($url, $id));
         }
         
