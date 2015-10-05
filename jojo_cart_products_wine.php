@@ -918,7 +918,7 @@ class jojo_plugin_jojo_cart_products_wine extends JOJO_Plugin
             $formattedname = self::formatname($nameformat, $i);
             if ($formattedname == $dupenamecheck) continue;
             $dupenamecheck = $formattedname;
-            $nav[$i['id']]['url'] = $i['url'];
+            $nav[$i['id']]['url'] = _SITEURL . '/' . $i['url'];
             $nav[$i['id']]['title'] = ($i['seotitle'] ? $i['seotitle'] : ($i['pr_desc'] ? htmlspecialchars($i['pr_desc'], ENT_COMPAT,'UTF-8',false) : $i['title']));
             $nav[$i['id']]['label'] = $formattedname;
             $nav[$i['id']]['selected'] = (boolean)($selected && (($id && $id== $i['id']) ||(!empty($url) && $i['url'] == $url)));
