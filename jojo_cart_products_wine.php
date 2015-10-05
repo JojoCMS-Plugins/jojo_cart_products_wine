@@ -571,6 +571,14 @@ class jojo_plugin_jojo_cart_products_wine extends JOJO_Plugin
 
             /* get product content and assign to Smarty */
             $products = array_slice($products, $start, $productsperpage);
+            
+            /* Get Awards if used */
+            foreach ($products as &$p) {
+                if (class_exists('Jojo_Plugin_Jojo_cart_product_award')) {
+                   $p['awards'] = Jojo_Plugin_Jojo_cart_product_award::getProductAwards('', '', $p['id']);
+                }
+            }
+
             $smarty->assign('wines', $products);
             $content['content'] = $smarty->fetch('jojo_cart_products_wine_index.tpl');
 

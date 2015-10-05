@@ -7,10 +7,10 @@
         {$wine.pr_body}
     {jojoHook hook="productAfterBody"}
     {if $wine.pr_price > 0}
-        <p>[[buynow: {$wine.pr_code}]] Bottle Price: {$currencysymbol}{$wine.pr_price}</p>
+        <p>[[buynowlink: {$wine.pr_code}]] Bottle Price: {$currencysymbol}{$wine.pr_price}</p>
     {/if}
     {if $wine.pr_caseprice > 0}
-        <p>[[buynow: {$wine.pr_code}_case]] Case Price ({$wine.pr_casesize} bottles): {$currencysymbol}{$wine.pr_caseprice}</p>
+        <p>[[buynowlink: {$wine.pr_code}_case]] Case Price ({$wine.pr_casesize} bottles): {$currencysymbol}{$wine.pr_caseprice}</p>
     {/if}
  {if $wine.pr_na_message}<p><strong>{$wine.pr_na_message}</strong></p>{/if}
 
