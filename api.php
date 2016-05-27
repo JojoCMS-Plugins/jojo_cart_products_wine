@@ -19,15 +19,10 @@ if (!defined('Jojo_Cart_Class')) {
     define('Jojo_Cart_Class', Jojo::getOption('jojo_cart_class', 'jojo_plugin_jojo_cart'));
 }
 
-$_provides['pluginClasses'] = array(
-        'jojo_plugin_jojo_cart_products_wine' => 'Wines - product Listing and View',
-        );
+$_provides['pluginClasses'] = array( 'Jojo_Plugin_Jojo_cart_products_wine' => 'Wines - List and Detail Pages',);
 
 /* add a new field type for admin section */
-$_provides['fieldTypes'] = array(
-        'userpricing' => 'Products - Per User Pricing',
-        );
-
+$_provides['fieldTypes'] = array('userpricing' => 'Products - Per User Pricing');
 
 /* Register URI handlers */
 Jojo::registerURI(null, 'jojo_plugin_jojo_cart_products_wine', 'isUrl');

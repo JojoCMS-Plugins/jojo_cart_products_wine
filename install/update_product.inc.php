@@ -309,7 +309,7 @@ $default_fd[$table]['ta'] = array(
         'fd_type' => "text",
         'fd_size' => "30",
         'fd_unit' => "g/L",
-        'fd_help' => "",
+        'fd_help' => "TA level in g/L",
         'fd_order' => $o++,
         'fd_tabname' => "Notes",
     );
@@ -318,7 +318,7 @@ $default_fd[$table]['sugar'] = array(
         'fd_type' => "text",
         'fd_size' => "30",
         'fd_unit' => "g/L",
-        'fd_help' => "",
+        'fd_help' => "Residual Sugar level in g/L",
         'fd_order' => $o++,
         'fd_tabname' => "Notes",
     );
@@ -369,6 +369,7 @@ $default_fd[$table]['pr_price'] = array(
         'fd_type' => "decimal",
         'fd_required' => "yes",
         'fd_default' => "0.00",
+        'fd_help' => "Set case price to NA for products not available for sale (wines will still display on wine pages if option is set)",
         'fd_size' => "10",
         'fd_order' => "1",
         'fd_tabname' => "Pricing",
@@ -381,6 +382,7 @@ $default_fd[$table]['pr_caseprice'] = array(
         'fd_required' => "yes",
         'fd_default' => "0.00",
         'fd_size' => "10",
+        'fd_help' => "Use NA for products not available for sale (wines will still display on wine pages if option is set)",
         'fd_order' => "2",
         'fd_tabname' => "Pricing",
     );
@@ -391,7 +393,7 @@ $default_fd[$table]['pr_casesize'] = array(
         'fd_type' => "integer",
         'fd_default' => "12",
         'fd_size' => "10",
-        'fd_help' => "Bottles per case",
+        'fd_help' => "Number of bottles in a standard case",
         'fd_order' => "3",
         'fd_tabname' => "Pricing",
     );
@@ -524,7 +526,7 @@ $default_td['productcategory'] = array(
         'td_deleteoption' => "yes",
         'td_menutype' => "list",
         'td_help' => "New Product Categories are managed from here.",
-        'td_plugin' => "jojo_cart_products_wine",
+        'td_plugin' => "jojo_cart_products_wine"
     );
 
 $o = 0;

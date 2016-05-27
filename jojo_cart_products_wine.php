@@ -14,7 +14,7 @@
  * @link    http://www.jojocms.org JojoCMS
  */
 
-class jojo_plugin_jojo_cart_products_wine extends JOJO_Plugin
+class Jojo_Plugin_Jojo_cart_products_wine extends Jojo_Plugin
 {
     static function getProductDetails($code)
     {
@@ -210,7 +210,7 @@ class jojo_plugin_jojo_cart_products_wine extends JOJO_Plugin
              /* Logged in user? */
             if ($_USERID && isset($userPricing[$productid])) {
                 /* Look for per user availability */
-                if ($userPricing[$productid]['case_price'] == 'NA') {
+                if ($userPricing[$productid]['case_price'] == 'NA' || $userPricing[$productid]['case_price'] == 'N/A') {
                     /* User can't purchase this varient */
                     unset($items[$k]);
                     continue;
@@ -219,7 +219,7 @@ class jojo_plugin_jojo_cart_products_wine extends JOJO_Plugin
                   $i['pr_price'] = $userPricing[$productid]['bottle_price'] ? $userPricing[$productid]['bottle_price'] : $i['pr_price'];
                 }
             } else {
-                if ($i['pr_caseprice'] == 'NA' && Jojo::getOption('product_show_NA_products', 'no')=='no') {
+                if (($i['pr_caseprice'] == 'NA' || $i['pr_caseprice'] == 'N/A') && Jojo::getOption('product_show_NA_products', 'no')=='no') {
                     /* Casual users can't purchase this product */
                     unset($items[$k]);
                     continue;
@@ -843,17 +843,7 @@ class jojo_plugin_jojo_cart_products_wine extends JOJO_Plugin
     {
         $prefix = false;
         $getvars = array();
-        /* Check the suffix matches and extract the prefix */
-        if (preg_match('#^(.+)/unsubscribe/([0-9]+)/([a-zA-Z0-9]{16})$#', $uri, $matches)) {
-            /* "$prefix/[action:unsubscribe]/[productid:integer]/[code:[a-zA-Z0-9]{16}]" eg "products/unsubscribe/34/7MztlFyWDEKiSoB1/" */
-            $prefix = $matches[1];
-            $getvars = array(
-                        'action' => 'unsubscribe',
-                        'productid' => $matches[2],
-                        'code' => $matches[3]
-                        );
-        /* Check for standard plugin url format matches */
-        } elseif ($uribits = parent::isPluginUrl($uri)) {
+        if ($uribits = parent::isPluginUrl($uri)) {
             $prefix = $uribits['prefix'];
             $getvars = $uribits['getvars'];
         } else {
@@ -942,10 +932,15 @@ class jojo_plugin_jojo_cart_products_wine extends JOJO_Plugin
             Jojo::updateQuery("UPDATE {product} SET `pr_htmllang`=? WHERE `productid`=?", array($htmllanguage, $id));
         }
         if (empty($product['pr_url'])) {
-            $url = Jojo::cleanURL(str_replace('ü', 'u', $product['title']));
+            $url = Jojo::cleanURL(str_replace('ü', 'u', html_entity_decode($product['title'])));
             Jojo::updateQuery("UPDATE {product} SET `pr_url`=? WHERE `productid`=?", array($url, $id));
         }
         
+        /* Clear the cache for this item  and its index page*/
+        Jojo::clearCache($scope='html', $product['url'] . 'index.html', $rmdir=true);
+        Jojo::clearCache($scope='html', 'pdf/' . $product['url'] . 'index.html', $rmdir=true);
+        Jojo::clearCache($scope='html', $product['pageurl'] . 'index.html');
+
         Jojo::updateQuery("UPDATE {option} SET `op_value`=? WHERE `op_name`='product_last_updated'", time());
         return true;
     }
